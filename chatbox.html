@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Codie AI</title>
+</head>
+<body>
+    <h1><strong> Chat with Codie AI</strong></h1>
+
+    <form action="{{ url_for('chatbox') }}" method="POST">
+        <label for="user">How can I help you today?</label>
+        <input type="text" id="user" name="user" required>
+        <button type="submit">Submit</button>
+    </form>
+     <h4> Type stop to stop the chat and clear history</h4>
+    <h3> Conversation History</h3>
+      <div>
+
+        <ul>
+            {% for message in history %}
+                <li><strong>{{ message.role }}:</strong> {{ message.content }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+
+
+    {% if user %}
+        <h3>You said: {{ user }}</h3>
+        <h3>AI says: {{ response }}</h3>
+    {% endif %}
+
+
+    {% if message %}
+        <h3>{{ message }}</h3>
+    {% endif %}
+
+</body>
+</html>
