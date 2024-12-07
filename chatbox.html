@@ -13,7 +13,19 @@
         <input type="text" id="user" name="user" required>
         <button type="submit">Submit</button>
     </form>
-     <h4> Type stop to stop the chat and clear history</h4>
+    <button id="start-speaking">🎤 Start Speaking</button>
+    <button id="stop-speaking" disabled>⏹ Stop</button>
+     <div id="ai-response">
+        {% if response %}
+          <p style="visibility: hidden;">{{ response }}</p>
+
+        {% endif %}
+    </div>
+
+
+    </div>
+    <button id="speak-response",style="display: none;">🔊 Hear Response</button>
+    <h4> Type stop to stop the chat and clear history</h4>
     <h3> Conversation History</h3>
       <div>
 
@@ -35,6 +47,78 @@
     {% if message %}
         <h3>{{ message }}</h3>
     {% endif %}
+
+    <script>
+        const startSpeakingButton = document.getElementById("start-speaking");
+        const stopSpeakingButton = document.getElementById("stop-speaking");
+        const userInput = document.getElementById("user");
+
+        let recognition;
+        let isRecognizing = false;
+
+        if ("webkitSpeechRecognition" in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = "en-US";
+
+            startSpeakingButton.addEventListener("click", () => {
+                if (isRecognizing) return;
+                recognition.start();
+                isRecognizing = true;
+                startSpeakingButton.disabled = true;
+                stopSpeakingButton.disabled = false;
+            });
+
+            stopSpeakingButton.addEventListener("click", () => {
+                if (!isRecognizing) return;
+                recognition.stop();
+                isRecognizing = false;
+                startSpeakingButton.disabled = false;
+                stopSpeakingButton.disabled = true;
+            });
+
+            recognition.onresult = (event) => {
+                let transcript = "";
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    transcript += event.results[i][0].transcript;
+                }
+                userInput.value = transcript;
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                alert("Speech recognition error occurred.");
+            };
+
+            recognition.onend = () => {
+                isRecognizing = false;
+                startSpeakingButton.disabled = false;
+                stopSpeakingButton.disabled = true;
+            };
+        } else {
+            alert("Your browser does not support the Web Speech API.");
+        }
+
+        const aiResponseElement = document.getElementById("ai-response");
+        const speakResponseButton = document.getElementById("speak-response");
+
+        if (aiResponseElement.textContent.trim() !== "") {
+            speakResponseButton.style.display = "inline-block";
+        }
+
+        speakResponseButton.addEventListener("click", () => {
+            const responseText = aiResponseElement.textContent.trim();
+            if (responseText) {
+                const speech = new SpeechSynthesisUtterance(responseText);
+                speech.lang = "en-US";
+                speech.rate = 1;
+                speech.pitch = 1;
+                window.speechSynthesis.speak(speech);
+            }
+        });
+    </script>
+
 
 </body>
 </html>
