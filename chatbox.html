@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <link rel="stylesheet" href="{{ url_for('static', filename='styles2.css') }}">
+    <title>Chat with Codie AI</title>
+</head>
+<body>
+    <h1><strong> Chat with Codie AI</strong></h1>
+
+    <form action="{{ url_for('chatbox') }}" method="POST">
+        <label for="user">Enter your message</label>
+        <input type="text" id="user" name="user" required>
+        <button type="submit">Submit</button>
+    </form>
+    <button id="start-speaking">🎤 Start Speaking</button>
+    <button id="stop-speaking" disabled>⏹ Stop</button>
+     <div id="ai-response">
+        {% if response %}
+          <p style="display: none;">{{ response }}</p>
+
+        {% endif %}
+    </div>
+
+
+
+    <button id="speak-response" ,style="display: none;">🔊 Hear Response</button>
+    <h4> Type stop to stop the chat and clear history</h4>
+    <h3> Conversation History</h3>
+      <div>
+
+        <ul>
+            {% for message in history %}
+                <li><strong>{{ message.role }}:</strong> {{ message.content }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+
+
+    {% if user %}
+        <h3>You said: {{ user }}</h3>
+        <h3>AI says: {{ response }}</h3>
+    {% endif %}
+
+
+    {% if message %}
+        <h3>{{ message }}</h3>
+    {% endif %}
+
+    <script>
+        const startSpeakingButton = document.getElementById("start-speaking");
+        const stopSpeakingButton = document.getElementById("stop-speaking");
+        const userInput = document.getElementById("user");
+
+        let recognition;
+        let isRecognizing = false;
+
+        if ("webkitSpeechRecognition" in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = "en-US";
+
+            startSpeakingButton.addEventListener("click", () => {
+                if (isRecognizing) return;
+                recognition.start();
+                isRecognizing = true;
+                startSpeakingButton.disabled = true;
+                stopSpeakingButton.disabled = false;
+            });
+
+            stopSpeakingButton.addEventListener("click", () => {
+                if (!isRecognizing) return;
+                recognition.stop();
+                isRecognizing = false;
+                startSpeakingButton.disabled = false;
+                stopSpeakingButton.disabled = true;
+            });
+
+            recognition.onresult = (event) => {
+                let transcript = "";
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    transcript += event.results[i][0].transcript;
+                }
+                userInput.value = transcript;
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                alert("Speech recognition error occurred.");
+            };
+
+            recognition.onend = () => {
+                isRecognizing = false;
+                startSpeakingButton.disabled = false;
+                stopSpeakingButton.disabled = true;
+            };
+        } else {
+            alert("Your browser does not support the Web Speech API.");
+        }
+
+        const aiResponseElement = document.getElementById("ai-response");
+        const speakResponseButton = document.getElementById("speak-response");
+
+        if (aiResponseElement.textContent.trim() !== "") {
+            speakResponseButton.style.display = "inline-block";
+        }
+
+        speakResponseButton.addEventListener("click", () => {
+            const responseText = aiResponseElement.textContent.trim();
+            if (responseText) {
+                const speech = new SpeechSynthesisUtterance(responseText);
+                speech.lang = "en-US";
+                speech.rate = 1;
+                speech.pitch = 1;
+                window.speechSynthesis.speak(speech);
+            }
+        });
+    </script>
+
+
+</body>
+</html>
